@@ -1,0 +1,5 @@
+/* Reset / preflight */
+@import "tailwindcss/preflight";
+
+/* All Tailwind utility classes */
+@tailwind utilities;
