@@ -1,5 +1,5 @@
-/* Reset / preflight */
-@import "tailwindcss/preflight";
-
-/* All Tailwind utility classes */
-@tailwind utilities;
+*{
+    margin: 0;
+    padding: 0;
+ box-sizing: border-box;
+}
