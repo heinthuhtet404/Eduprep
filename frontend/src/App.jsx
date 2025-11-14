@@ -7,6 +7,7 @@ import RegisterPage from "./pages/RegisterPage";
 function App() {
   const [user, setUser] = useState(null);
 
+  // Load user from localStorage at start
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -16,7 +17,7 @@ function App() {
 
   return (
     <Routes>
-      {/* default route */}
+      {/* Default route - check login and redirect */}
       <Route
         path="/"
         element={<Navigate to={user ? "/home" : "/login"} />}
@@ -38,7 +39,7 @@ function App() {
         }
       />
 
-      {/* Home Page */}
+      {/* Home Page - Protected */}
       <Route
         path="/home"
         element={user ? <Home user={user} /> : <Navigate to="/login" />}
