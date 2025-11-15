@@ -1,14 +1,40 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 export default function RegisterPage({ setUser }) {
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  // Controlled input states
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    const userData = { username: "hein", token: "abcd1234" };
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
-    navigate("/home");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/register", {
+        username,
+        email,
+        password,
+      });
+
+      // Save user info + token
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setUser(res.data);
+
+      // Navigate to main page
+      navigate("/home");
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -18,7 +44,7 @@ export default function RegisterPage({ setUser }) {
         justifyContent: "center",
         alignItems: "center",
         height: "100vh",
-        backgroundColor: "#F3F4F6", // gray-50
+        backgroundColor: "#F3F4F6",
       }}
     >
       <form
@@ -44,9 +70,17 @@ export default function RegisterPage({ setUser }) {
           Register
         </h2>
 
+        {error && (
+          <p style={{ color: "red", fontSize: "14px", marginBottom: "12px" }}>
+            {error}
+          </p>
+        )}
+
         <input
           type="text"
           placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           style={{
             border: "1px solid #D1D5DB",
             padding: "10px",
@@ -58,6 +92,8 @@ export default function RegisterPage({ setUser }) {
         <input
           type="email"
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           style={{
             border: "1px solid #D1D5DB",
             padding: "10px",
@@ -69,6 +105,8 @@ export default function RegisterPage({ setUser }) {
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           style={{
             border: "1px solid #D1D5DB",
             padding: "10px",
@@ -80,8 +118,9 @@ export default function RegisterPage({ setUser }) {
 
         <button
           type="submit"
+          disabled={loading}
           style={{
-            backgroundColor: "#16A34A", // green-600
+            backgroundColor: "#16A34A",
             color: "#FFFFFF",
             padding: "10px",
             borderRadius: "12px",
@@ -89,9 +128,10 @@ export default function RegisterPage({ setUser }) {
             cursor: "pointer",
             fontWeight: "600",
             fontSize: "14px",
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Register
+          {loading ? "Registering..." : "Register"}
         </button>
 
         <p

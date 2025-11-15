@@ -1,14 +1,38 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 export default function LoginPage({ setUser }) {
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  // Controlled inputs
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const userData = { username: "hein", token: "abcd1234" };
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
-    navigate("/home");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
+
+      // Save user info + token
+      localStorage.setItem("user", JSON.stringify(res.data));
+      setUser(res.data);
+
+      // Navigate to main chat page
+      navigate("/home");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,9 +68,17 @@ export default function LoginPage({ setUser }) {
           Login
         </h2>
 
+        {error && (
+          <p style={{ color: "red", fontSize: "14px", marginBottom: "12px" }}>
+            {error}
+          </p>
+        )}
+
         <input
-          type="text"
-          placeholder="Username"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           style={{
             border: "1px solid #D1D5DB",
             padding: "10px",
@@ -58,6 +90,8 @@ export default function LoginPage({ setUser }) {
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           style={{
             border: "1px solid #D1D5DB",
             padding: "10px",
@@ -69,6 +103,7 @@ export default function LoginPage({ setUser }) {
 
         <button
           type="submit"
+          disabled={loading}
           style={{
             backgroundColor: "#4F46E5",
             color: "#FFFFFF",
@@ -78,9 +113,10 @@ export default function LoginPage({ setUser }) {
             cursor: "pointer",
             fontWeight: "600",
             fontSize: "14px",
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         <p
