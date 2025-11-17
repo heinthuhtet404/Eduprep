@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { BookmarkIcon } from "@heroicons/react/24/solid";
 import "./ScrollHide.css";
 import {
@@ -10,6 +11,8 @@ import {
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   const sidebarStyle = {
     backgroundColor: "#dee1ec",
@@ -58,6 +61,14 @@ export default function Sidebar() {
 
   const [hoveredChat, setHoveredChat] = useState(null); // track hovered list
   const [openMenu, setOpenMenu] = useState(null); // track open three-dot menu
+
+  useEffect(() => {
+    // Get user from localStorage
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (userData && userData.user) {
+      setUser(userData.user);
+    }
+  }, []);
 
   return (
     <div style={sidebarStyle}>
@@ -342,15 +353,11 @@ export default function Sidebar() {
       {/* Sidebar Bottom User Profile */}
       <div
         style={{
-          // position: "absolute",
-          // bottom: "20px",
-          // left: "0",
-          // width: "100%",
+
           display: "flex",
           alignItems: "center",
           gap: "12px",
           padding: "12px 20px",
-          // background: "",
           backdropFilter: "blur(10px)",
           borderTop: "1px solid rgba(0,0,0,0.05)",
           boxShadow: "0 -2px 10px rgba(0,0,0,0.05)",
@@ -371,50 +378,28 @@ export default function Sidebar() {
         />
 
         {/* Username & Status */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <span
-            style={{
-              fontSize: "15px",
-              fontWeight: "600",
-              color: "#111827",
-            }}
-          >
-            Hein Thu Htet
-          </span>
-          <span
-            style={{
-              fontSize: "13px",
-              color: "#6B7280",
-            }}
-          >
-            Online 
-          </span>
-        </div>
-      </div>
-
-
-
-      {/* Collapse Button */}
-      {/* <button
-        onClick={() => setCollapsed(!collapsed)}
-        style={{
-          backgroundColor: "transparent",
-          border: "none",
-          cursor: "pointer",
-          color: "#4B5563",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: collapsed ? "center" : "flex-end",
-          marginTop: "auto",
-          padding: "8px 0",
-        }}
-      >
-        {collapsed ? (
-          <ChevronRightIcon style={{ width: "20px", height: "20px" }} />
-        ) : (
-          <ChevronLeftIcon style={{ width: "20px", height: "20px" }} />
+        {!collapsed && user && (
+          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            <span
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                color: "#111827",
+              }}
+            >
+              {user.username}  {/* ← ဒီမှာပြောင်းပါ */}
+            </span>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "#6B7280",
+              }}
+            >
+              {user.email}  {/* ← Email ပါပြချင်ရင် ဒါထည့်ပါ */}
+            </span>
+          </div>
         )}
-      </button> */}
+      </div>
     </div>
   );
 }
