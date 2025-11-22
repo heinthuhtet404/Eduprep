@@ -1,79 +1,118 @@
-import { useRef } from "react";
+// components/ChatArea.js
+import { useState } from "react";
+import ChatHeader from "./ChatHeader";
+import ChatMessages from "./ChatMessages";
+import ChatInput from "./ChatInput";
 import "./ScrollHide.css";
+import { processUserPrompt } from "../utils/chatProcessor";
 
-export default function ChatInput() {
-  const textareaRef = useRef(null);
+export default function ChatArea() {
+  const [messages, setMessages] = useState([
+    { 
+      id: 1, 
+      sender: "bot", 
+      text: "👋 Let's test parameter extraction! I'll detect years, subjects, and grades from your message.", 
+      analysis: null 
+    },
+  ]);
 
-  const handleInput = (e) => {
-    const ta = textareaRef.current;
-    if (ta) {
-      ta.style.height = "auto"; // reset height
-      ta.style.height = Math.min(ta.scrollHeight, 120) + "px"; // max 120px
+  const handleSendMessage = async (messageText) => {
+    const processingResult = processUserPrompt(messageText);
+    
+    const userMessage = {
+      id: Date.now(),
+      sender: "user", 
+      text: messageText,
+      analysis: processingResult.data,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    const aiResponse = generateAIResponse(processingResult);
+    
+    const aiMessage = {
+      id: Date.now() + 1,
+      sender: "bot", 
+      text: aiResponse,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, aiMessage]);
+  };
+
+  // ✅ Updated to show parameters
+  const generateAIResponse = (processingResult) => {
+    if (!processingResult.success) {
+      return "❌ Analysis failed. Please try again.";
     }
+
+    const { language, sentences, keywords, intent, parameters } = processingResult.data;
+    
+    let response = `🔍 Analysis Result:\n`;
+    response += `• Language: ${language}\n`;
+    response += `• Sentences: ${sentences.length}\n`;
+    response += `• Keywords: ${keywords.length} found\n`;
+    response += `• Intent: ${intent}\n`;
+    response += `• Parameters: ${Object.keys(parameters).length} detected\n\n`;  // ✅ NEW
+    
+    // ✅ Show parameters section
+    if (Object.keys(parameters).length > 0) {
+      response += `📊 Extracted Parameters:\n`;
+      for (const [key, value] of Object.entries(parameters)) {
+        response += `  • ${key}: ${value}\n`;
+      }
+      response += `\n`;
+    }
+    
+    if (keywords.length > 0) {
+      response += `🔑 Important Keywords:\n`;
+      keywords.forEach((keyword, index) => {
+        response += `  ${index + 1}. "${keyword}"\n`;
+      });
+      response += `\n`;
+    }
+    
+    if (sentences.length > 0) {
+      response += `📝 Sentences:\n`;
+      sentences.forEach((sentence, index) => {
+        response += `  ${index + 1}. "${sentence}"\n`;
+      });
+      response += `\n`;
+    }
+    
+    // Smart summary based on analysis
+    response += `🎯 I understand you want `;
+    
+    if (parameters.subject) response += `${parameters.subject} `;
+    if (parameters.year) response += `from ${parameters.year} `;
+    if (parameters.grade) response += `for grade ${parameters.grade} `;
+    
+    switch(intent) {
+      case 'explain':
+        response += `explanations`;
+        break;
+      case 'question':
+        response += `questions`;
+        break;
+      case 'example':
+        response += `examples`;
+        break;
+      case 'calculate':
+        response += `calculations`;
+        break;
+      default:
+        response += `assistance`;
+    }
+    
+    return response;
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        borderRadius: "40px",
-        backgroundColor: "white",
-        padding: "12px 20px",
-        boxShadow: `0 4px 6px rgba(0, 0, 0, 0.1),
-                    inset 0 0 6px rgba(255, 255, 255, 0.3)`,
-        border: "1px solid rgba(255, 255, 255, 0.4)",
-        backdropFilter: "blur(8px)",
-        margin: "0px 50px 20px 50px",
-        gap: "12px",
-      }}
-    >
-      <textarea
-        ref={textareaRef}
-        placeholder="Type your question..."
-        rows={1}
-        onInput={handleInput}
-        style={{
-          flex: 1,
-          border: "none",
-          outline: "none",
-          fontSize: "15px",
-          backgroundColor: "transparent",
-          color: "#374151",
-          resize: "none",
-          overflowY: "auto",
-          maxHeight: "120px", // limit height
-          lineHeight: "1.5",
-        }}
-        className="scroll-hide"
-      />
-      <button
-        style={{
-          background: "linear-gradient(135deg, #6366F1, #4F46E5)",
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: "40px",
-          padding: "10px 28px",
-          cursor: "pointer",
-          fontWeight: "600",
-          fontSize: "15px",
-          letterSpacing: "0.3px",
-          boxShadow: "0 6px 15px rgba(99, 102, 241, 0.3)",
-          transition: "all 0.25s ease-in-out",
-          backdropFilter: "blur(4px)",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-3px)";
-          e.currentTarget.style.boxShadow =
-            "0 10px 20px rgba(99, 102, 241, 0.45)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 6px 15px rgba(99, 102, 241, 0.3)";
-        }}
-      >
-        Send
-      </button>
+    <div style={{ backgroundColor: "#dee1ec", height: "100%", display: "flex", flexDirection: "column" }}>
+      <ChatHeader title="Step 5: Parameter Extraction" /> {/* ✅ Updated title */}
+      <ChatMessages messages={messages} />
+      <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );
 }
